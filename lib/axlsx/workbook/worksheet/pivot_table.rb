@@ -25,6 +25,7 @@ module Axlsx
       @data = []
       @pages = []
       @subtotal = nil
+      @pivot_table_style_info = PivotTableStyleInfo.new(options[:style_info]) if options[:style_info]
       parse_options options
       yield self if block_given?
     end
@@ -122,6 +123,34 @@ module Axlsx
       @pages = v
     end
 
+    # The name of the pivot table.
+    # @param [String, Cell] v
+    # @return [Title]
+    def name=(v)
+      DataTypeValidator.validate :table_name, [String], v
+      if v.is_a?(String)
+        @name = v
+      end
+    end
+
+    # PivotTableStyleInfo for the pivot table. 
+    # initialization can be fed via the :style_info option
+    def pivot_table_style_info
+      @pivot_table_style_info ||= PivotTableStyleInfo.new
+    end 
+
+    # The subtotal calculation type for the data.
+    # @return [String]
+    attr_reader :subtotal
+
+    # (see #range)
+    def subtotal=(v)
+      DataTypeValidator.validate "#{self.class}.subtotal", [String], v
+      if v.is_a?(String)
+        @subtotal = v
+      end
+    end
+
     # The index of this chart in the workbooks charts collection
     # @return [Integer]
     def index
@@ -206,6 +235,7 @@ module Axlsx
         end
         str << '</dataFields>'
       end
+      pivot_table_style_info.to_xml_string(str)
       str << '</pivotTableDefinition>'
     end
 
